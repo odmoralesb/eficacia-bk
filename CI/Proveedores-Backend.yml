@@ -1,0 +1,79 @@
+name: $(MajorVersion).$(MinorVersion).$(rev:r)
+
+trigger:
+  branches:
+   include: 
+    - desarrollo
+    - pruebas
+    - main
+  paths:
+    exclude:
+      - CI
+      - .azuredevops
+      - README.md
+
+resources:
+  repositories:
+    - repository: templates
+      type: git
+      name: ERPTQ/Azure_pipelines
+      ref: refs/heads/main
+      
+variables:
+- name: Artifact_name
+  value: 'Proveedores-Backend'
+- ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/desarrollo') }}:
+  - group: 'ERP_TQ-Proveedores-Backend-Dev'
+  - name: EnvironmentName
+    value : 'ERP_TQ'
+  
+- ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/pruebas') }}:
+  - group: 'ERP_TQ-Proveedores-Backend-Test'
+  - name: EnvironmentName
+    value : 'ERP_TQ'
+ 
+- ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+  - group: 'ERP_TQ-Proveedores-Backend-Production'
+  - name: EnvironmentName
+    value : 'ERP_TQ'
+
+stages:   
+  # build 
+  - template: CI/ASPNetCore/BuildAspNet.yml@templates
+    parameters:
+      nugetConfigPath: 'TQ.Proveedores/nuget.config'
+      appSettingsPath: |
+        **/appsettings*.json
+      
+  # Deploy Desarrollo  Pipeline BACKEND
+  - template: CI/ERP_TQ/Backend/deploywindows.yml@templates
+    parameters:
+      appName: 'TQ.Proveedores.Api'
+      artifactName: '$(Artifact_name)'
+      stageRef: 'Dev'
+      description: 'Desplegar en ambiente de Desarrollo'
+      dependsOn: 'Build'
+      environment: '$(EnvironmentName)'
+      head: 'refs/heads/desarrollo'
+      
+  # Deploy Test  Pipeline BACKEND
+  - template: CI/ERP_TQ/Backend/deploywindows.yml@templates
+    parameters:
+      appName: 'TQ.Proveedores.Api'
+      artifactName: '$(Artifact_name)'
+      stageRef: 'Test'
+      description: 'Desplegar en ambiente de Test'
+      dependsOn: 'Build'
+      environment: '$(EnvironmentName)'
+      head: 'refs/heads/pruebas'
+      
+  # Deploy Production  Pipeline BACKEND 
+  - template: CI/ERP_TQ/Backend/deploywindows.yml@templates
+    parameters:
+      appName: 'TQ.Proveedores.Api' 
+      artifactName: '$(Artifact_name)'
+      stageRef: 'Production'
+      description: 'Desplegar en ambiente de Producción'
+      dependsOn: 'Build'
+      environment: '$(EnvironmentName)'
+      head: 'refs/heads/main'

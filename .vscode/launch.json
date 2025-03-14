@@ -1,0 +1,62 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": ".NET Core Launch (web)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/TQ.Proveedores/TQ.Proveedores.Api/bin/Debug/net6.0/TQ.Proveedores.Api.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/TQ.Proveedores/TQ.Proveedores.Api",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ConnectionStrings__Entities": "Data Source=172.26.18.110;Initial Catalog=ERPTQ_EFICACIA_PROVEEDORES;Persist Security Info=True;User ID=sa;Password=65F0r735cu3",
+                "Cors__Origin": "http://localhost:4200",
+                "Cors__AllowedHeaders": "*",
+                "Cors__AllowedMethods": "*",
+                "Cors__AllowCredentials": "true",
+                "Cors__ExposedHeaders": "Content-Disposition",
+                "Identity__Authority": "https://componenteseguridadidentsrvdesa.azurewebsites.net",
+                "Identity__Audience": "",
+                "Identity__ValidateAudience": "false",
+                "Identity__ClientId": "ERPTQ_EFICACIA_PROVEEDORES",
+                "Identity__ClientSecret": "YTNjZWE4YWMtZTFhNS00OWU5LThiNGEtNGZjNTkxYmI3YzAw",
+                "Identity__Scope": "openid profile roles ERP_TQ",
+                "Identity__GetClaimsFromUserInfoEndpoint": "true",
+                "Identity__ClaimPrefix": "ERPTQ_EFICACIA_PROVEEDORES",
+                "QuartzCron__CalcularIndicadoresEvaluacion": "0 0 4 * * ? *",
+                "QuartzCron__EnviarEvaluacionProveedores": "0 0 4 * * ? *",
+                "SmtpConfig__Sender": "erptqnotificaciones@tecnoquimicas.com",
+                "SmtpConfig__SenderAlias": "notificaciones",
+                "SmtpConfig__Subject": "(Dev) Eficacia de Proveedores",
+                "SmtpConfig__Host": "172.26.18.110",
+                "SmtpConfig__Port": "25",
+                "SmtpConfig__EnableSsl": "false",
+                "SmtpConfig__Username": "",
+                "SmtpConfig__Password": "",
+                "Logging__LogLevel__Default": "Trace",
+                "Logging__LogLevel__Microsoft": "Warning",
+                "Logging__LogLevel__Microsoft.Hosting.Lifetime": "Information",
+                "AllowedHosts": "*"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/Views"
+            },
+            "console": "integratedTerminal",
+            "logging": {
+                "moduleLoad": false
+            }
+        },
+        {
+            "name": ".NET Core Attach",
+            "type": "coreclr",
+            "request": "attach"
+        }
+    ]
+}
