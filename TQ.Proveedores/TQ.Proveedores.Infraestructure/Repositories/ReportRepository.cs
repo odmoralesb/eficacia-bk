@@ -117,6 +117,32 @@ namespace TQ.Proveedores.Infraestructure.Repositories
             return result;
         }
 
+
+        public async Task<int> ExecuteScalarAsync<T>(string query, CancellationToken cancellationToken, int? commandTimeoutInSeconds = null)
+        {
+            using (var cmd = _dbContext.Database.GetDbConnection().CreateCommand())
+            {
+                if (cmd.Connection.State != ConnectionState.Open)
+                {
+                    await cmd.Connection.OpenAsync(cancellationToken);
+                }
+                cmd.CommandText = query;
+                cmd.CommandType = CommandType.Text; // Correcto para SQL directo
+                if (commandTimeoutInSeconds != null)
+                {
+                    cmd.CommandTimeout = (int)commandTimeoutInSeconds;
+                }
+
+                object result = await cmd.ExecuteScalarAsync(cancellationToken);
+
+                await cmd.Connection.CloseAsync();
+
+                return (result == DBNull.Value || result == null) ? 0 : Convert.ToInt32(result);
+            }
+        }
+
+
+
         public async Task<List<TEntity>> ObtenerReporteDetallado(string query, CancellationToken cancellationToken, int? commandTimeOutInSeconds = null)
         {
             List<TEntity> result = new List<TEntity>();

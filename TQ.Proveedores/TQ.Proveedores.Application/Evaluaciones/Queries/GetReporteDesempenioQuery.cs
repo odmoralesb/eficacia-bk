@@ -20,12 +20,14 @@ namespace TQ.Proveedores.Application.Evaluaciones.Queries
         public List<Guid>? ProveedorIds { get; set; }
         public List<Guid>? CompradorIds { get; set; }
         public List<string>? UnidadProductiva { get; set; }
-        public int? Anio { get; set; }
+        public List<string>? Anio { get; set; }
         public List<int>? Trimestre { get; set; }
         public string Desempenio { get; set; }
         public decimal? IndicadorCalidad { get; set; }
         public decimal? IndicadorCantidad { get; set; }
         public decimal? IndicadorFecha { get; set; }
+        public int Page { get; set; } = 1;
+        public int PageSize { get; set; } = 20;
     }
 
     public class GetReporteDesempenioQueryHandler : IRequestHandler<GetReporteDesempenioQuery, ResponseBase<ReporteDTO>>
@@ -53,9 +55,11 @@ namespace TQ.Proveedores.Application.Evaluaciones.Queries
             }
             else
             {
-                if (request.Anio != null)
+                //if (request.Anio != null)
+                if (request.Anio != null && request.Anio.Any())
                 {
-                    whereClause += $" AND CAL.Anio = {request.Anio}";
+                    //whereClause += $" AND CAL.Anio = {request.Anio}";
+                    whereClause += $" AND CAL.Anio IN ({string.Join(',', request.Anio)})";
                 }
 
                 if (request.Trimestre != null && request.Trimestre.Any())
@@ -82,19 +86,19 @@ namespace TQ.Proveedores.Application.Evaluaciones.Queries
                 whereClause += $" AND OC.UnidadProductiva IN ({string.Join(',', ups)})";
             }
 
-            if(request.IndicadorCalidad != null)
+            if (request.IndicadorCalidad != null)
             {
                 request.IndicadorCalidad = request.IndicadorCalidad / 10;
 
                 havingClause += $" AND AVG(E.IndicadorCalidad/10) = {request.IndicadorCalidad}";
             }
 
-            if(request.IndicadorCantidad != null)
+            if (request.IndicadorCantidad != null)
             {
                 request.IndicadorCantidad = request.IndicadorCantidad / 10;
                 havingClause += $" AND AVG(E.IndicadorCantidad/10) = {request.IndicadorCantidad} ";
             }
-            if(request.IndicadorFecha != null)
+            if (request.IndicadorFecha != null)
             {
                 request.IndicadorFecha = request.IndicadorFecha / 10;
                 havingClause += $" AND AVG(E.IndicadorFecha/10) = {request.IndicadorFecha} ";
@@ -150,10 +154,18 @@ namespace TQ.Proveedores.Application.Evaluaciones.Queries
                             HAVING  
                            		1 = 1
                                 {havingClause}
-	                            ;
                             ";
 
-            result.Filas = await _reportRepository.ObtenerReporte(query, cancellationToken);
+            string countQuery = $"SELECT COUNT(*) Cantidad FROM ({query}) AS SubQuery";
+            int totalCount = await _reportRepository.ExecuteScalarAsync<int>(countQuery, cancellationToken);
+
+
+            string paginatedQuery = query + $" ORDER BY CAL.Anio DESC, P.RazonSocial OFFSET {(request.Page - 1) * request.PageSize} ROWS FETCH NEXT {request.PageSize} ROWS ONLY";
+
+
+            //Result.Filas = await _reportRepository.ObtenerReporte(query, cancellationToken);
+            result.Filas = await _reportRepository.ObtenerReporte(paginatedQuery, cancellationToken);
+
             var parametro = _repositoryParametro.TableNoTracking.ProjectTo<ParametroDTO>(_mapper.ConfigurationProvider).FirstOrDefault(x => x.Nombre == "Porcentaje Minimo Aprobacion Mensual");
             var puntajeMinimo = parametro?.Valores.FirstOrDefault()?.Campo1;
             result.MinimoPuntaje = decimal.Parse(puntajeMinimo ?? "0");
